@@ -313,8 +313,7 @@ function AuthPage({ onAuthenticated }) {
 
               {/* Terms / Disclaimer */}
               <p className="text-[11px] leading-relaxed text-midnight/60">
-                By clicking Sign Up, you agree to our ledger terms. SpendWise
-                stores your budget and expenses in this browser only. They are not protected by a server account.
+                Spendwise accounts are stored only in this browser. There is no password reset; clearing browser site data removes local accounts and records. By signing up.
               </p>
 
               {/* Error Message inside Modal */}
