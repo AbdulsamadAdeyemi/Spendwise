@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --color-midnight: #241c16;
+  --color-ice-white: #fffdf8;
+  --color-aurora: #c56a2d;
+  --color-canvas: #efe6d8;
+  --color-sand: #f6efe4;
+  --color-income: #1f6b45;
+  --color-expense: #a33b32;
+}
+
+body {
+  margin: 0;
+  background: var(--color-canvas);
+  color: var(--color-midnight);
+  font-family: var(--font-sans);
+}

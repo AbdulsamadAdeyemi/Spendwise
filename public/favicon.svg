@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" fill="none">
+  <!-- Rounded Base in Brand Midnight -->
+  <rect width="64" height="64" rx="16" fill="#241C16" />
+  
+  <!-- Subtle Inner Border Glow -->
+  <rect x="1" y="1" width="62" height="62" rx="15" stroke="#FFFDF8" stroke-opacity="0.12" stroke-width="2" />
+
+  <!-- Peeking Banknote / Card (Ice-White & Green Accent) -->
+  <path d="M18 20C18 17.7909 19.7909 16 22 16H42C44.2091 16 46 17.7909 46 20V25H18V20Z" fill="#FFFDF8" />
+  <rect x="22" y="19" width="20" height="2.5" rx="1.25" fill="#1F6B45" />
+
+  <!-- Main Wallet Body (Aurora Copper/Terracotta) -->
+  <path d="M14 24C14 21.7909 15.7909 20 18 20H46C48.2091 20 50 21.7909 50 24V44C50 46.2091 48.2091 48 46 48H18C15.7909 48 14 46.2091 14 44V24Z" fill="#C56A2D" />
+
+  <!-- Wallet Flap & Clasp -->
+  <path d="M38 29C38 26.7909 39.7909 25 42 25H50V39H42C39.7909 39 38 37.2091 38 35V29Z" fill="#241C16" />
+  <circle cx="43" cy="32" r="3" fill="#FFFDF8" />
+  <circle cx="43" cy="32" r="1.5" fill="#C56A2D" />
+
+  <!-- Bottom Accent Curve -->
+  <path d="M18 44C18 45.1046 18.8954 46 20 46H44C45.1046 46 46 45.1046 46 44" stroke="#FFFDF8" stroke-opacity="0.25" stroke-width="2" stroke-linecap="round" />
+</svg>
