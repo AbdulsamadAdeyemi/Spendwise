@@ -170,10 +170,7 @@ export const authService = {
 
     users.push(newUser);
     saveStoredUsers(users);
-
-    const publicUser = toPublicUser(newUser);
-    localStorage.setItem(ACTIVE_USER_STORAGE_KEY, JSON.stringify(publicUser));
-    return publicUser;
+    return toPublicUser(newUser);
   },
 
   async login({ email, password }) {

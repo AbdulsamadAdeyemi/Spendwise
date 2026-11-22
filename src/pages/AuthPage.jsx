@@ -8,6 +8,14 @@ function AuthPage({ onAuthenticated }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
   const [modalShowPassword, setModalShowPassword] = useState(false);
+  const [registrationFirstName, setRegistrationFirstName] = useState("");
+  const [registrationLastName, setRegistrationLastName] = useState("");
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginSuccessMessage, setLoginSuccessMessage] = useState("");
+
+  const registrationInitials =
+    `${registrationFirstName.trim()[0] ?? ""}${registrationLastName.trim()[0] ?? ""}`
+      .toUpperCase() || "?";
 
   // Close modal on Escape key
   useEffect(() => {
@@ -25,6 +33,7 @@ function AuthPage({ onAuthenticated }) {
     event.preventDefault();
     setIsSubmitting(true);
     setErrorMessage("");
+    setLoginSuccessMessage("");
 
     const formData = new FormData(event.currentTarget);
     const body = Object.fromEntries(formData.entries());
@@ -48,13 +57,18 @@ function AuthPage({ onAuthenticated }) {
     setIsSubmitting(true);
     setErrorMessage("");
 
-    const formData = new FormData(event.currentTarget);
+    const registrationForm = event.currentTarget;
+    const formData = new FormData(registrationForm);
     const body = Object.fromEntries(formData.entries());
 
     try {
-      const user = await authService.register(body);
+      await authService.register(body);
       setIsSignUpModalOpen(false);
-      onAuthenticated(user);
+      setLoginEmail(body.email.trim().toLowerCase());
+      setLoginSuccessMessage("Account created successfully. Log in with your new account.");
+      setRegistrationFirstName("");
+      setRegistrationLastName("");
+      setModalShowPassword(false);
     } catch (error) {
       setErrorMessage(
         error instanceof Error
@@ -100,6 +114,8 @@ function AuthPage({ onAuthenticated }) {
                   placeholder="Email address"
                   maxLength={254}
                   required
+                  value={loginEmail}
+                  onChange={(event) => setLoginEmail(event.target.value)}
                   className="w-full rounded-xl border border-midnight/15 bg-white px-4 py-3.5 text-base text-midnight placeholder:text-midnight/40 outline-none transition focus:border-aurora focus:bg-white focus:ring-2 focus:ring-aurora/20"
                 />
               </div>
@@ -137,6 +153,15 @@ function AuthPage({ onAuthenticated }) {
                 </div>
               )}
 
+              {loginSuccessMessage && (
+                <div
+                  role="status"
+                  className="rounded-xl border border-income/20 bg-income/10 px-3.5 py-2.5 text-sm font-medium text-income"
+                >
+                  {loginSuccessMessage}
+                </div>
+              )}
+
               {/* Facebook-style Log In Button */}
               <button
                 type="submit"
@@ -151,8 +176,8 @@ function AuthPage({ onAuthenticated }) {
                 <button
                   type="button"
                   onClick={() =>
-                    alert(
-                      "SpendWise accounts are stored only in this browser. There is no password reset; clearing browser site data removes local accounts and records."
+                    window.alert(
+                      "SpendWise accounts are stored only in this browser. Password reset is not available yet. Clearing browser site data removes local accounts and records."
                     )
                   }
                   className="text-xs font-medium text-aurora transition hover:underline focus:outline-none sm:text-sm"
@@ -245,6 +270,8 @@ function AuthPage({ onAuthenticated }) {
                     placeholder="First name"
                     maxLength={60}
                     required
+                    value={registrationFirstName}
+                    onChange={(event) => setRegistrationFirstName(event.target.value)}
                     className="w-full rounded-xl border border-midnight/15 bg-white px-3.5 py-2.5 text-sm text-midnight placeholder:text-midnight/40 outline-none transition focus:border-aurora focus:bg-white focus:ring-2 focus:ring-aurora/20"
                   />
                 </div>
@@ -257,6 +284,8 @@ function AuthPage({ onAuthenticated }) {
                     placeholder="Surname"
                     maxLength={60}
                     required
+                    value={registrationLastName}
+                    onChange={(event) => setRegistrationLastName(event.target.value)}
                     className="w-full rounded-xl border border-midnight/15 bg-white px-3.5 py-2.5 text-sm text-midnight placeholder:text-midnight/40 outline-none transition focus:border-aurora focus:bg-white focus:ring-2 focus:ring-aurora/20"
                   />
                 </div>
@@ -299,8 +328,22 @@ function AuthPage({ onAuthenticated }) {
                 </button>
               </div>
 
-              {/* Optional Avatar URL */}
-              <div>
+              {/* Generated initials avatar on mobile */}
+              <div className="flex items-center gap-3 sm:hidden" aria-label="Your generated profile avatar">
+                <span
+                  aria-hidden="true"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-midnight via-[#2c221b] to-midnight text-sm font-extrabold text-aurora ring-1 ring-aurora/30"
+                >
+                  {registrationInitials}
+                </span>
+                <div>
+                  <p className="text-sm font-semibold text-midnight">Profile avatar</p>
+                  <p className="text-xs text-midnight/55">Generated from your name</p>
+                </div>
+              </div>
+
+              {/* Optional Avatar URL: available on larger screens */}
+              <div className="hidden sm:block">
                 <input
                   id="profilePictureUrl"
                   name="profilePictureUrl"
