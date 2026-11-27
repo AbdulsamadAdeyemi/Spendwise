@@ -33,3 +33,11 @@ build/
 *.njsproj
 *.sln
 *.sw?
+
+# Backend local secrets and database files
+backend/.env
+backend/.env.*
+!backend/.env.example
+backend/node_modules/
+backend/data/
+*.db
