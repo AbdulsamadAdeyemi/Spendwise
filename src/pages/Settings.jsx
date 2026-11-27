@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Check, Sliders, User, WalletCards } from "lucide-react";
 import { formatMoney } from "../utils/finance";
 import ProfileAvatar from "../components/ProfileAvatar";
+import { settingsService } from "../services/settingsService";
 
 const EXPENSE_CATEGORIES = [
   { value: "Food", label: "Food & Dining" },
@@ -24,31 +25,24 @@ function Settings({ user, incomePlan, onSaveIncomePlan }) {
   );
   const [period, setPeriod] = useState(incomePlan?.period || "monthly");
 
-  // Default Entry Preferences state with localStorage persistence
-  const defaultTypeKey = user?.id
-    ? `spendwise-default-type:${user.id}`
-    : "spendwise-default-type";
-  const defaultCategoryKey = user?.id
-    ? `spendwise-default-category:${user.id}`
-    : "spendwise-default-category";
-
-  const [defaultType, setDefaultType] = useState(() => {
-    return (
-      window.localStorage.getItem(defaultTypeKey) ||
-      window.localStorage.getItem("spendwise-default-type") ||
-      "expense"
-    );
-  });
-
-  const [defaultCategory, setDefaultCategory] = useState(() => {
-    return (
-      window.localStorage.getItem(defaultCategoryKey) ||
-      window.localStorage.getItem("spendwise-default-category") ||
-      "Food"
-    );
-  });
-
+  // Default Entry Preferences state loaded directly from backend PostgreSQL
+  const [defaultType, setDefaultType] = useState("expense");
+  const [defaultCategory, setDefaultCategory] = useState("Food");
   const [isPrefSaved, setIsPrefSaved] = useState(false);
+
+  // Sync preferences from PostgreSQL backend on mount
+  useEffect(() => {
+    let isMounted = true;
+    settingsService.getPreferences().then((prefs) => {
+      if (isMounted && prefs) {
+        if (prefs.defaultType) setDefaultType(prefs.defaultType);
+        if (prefs.defaultCategory) setDefaultCategory(prefs.defaultCategory);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   function handleSubmit(event) {
     event.preventDefault();
@@ -63,31 +57,24 @@ function Settings({ user, incomePlan, onSaveIncomePlan }) {
       nextType === "income"
         ? "Income"
         : defaultCategory === "Income"
-        ? "Food"
-        : defaultCategory;
+          ? "Food"
+          : defaultCategory;
     setDefaultCategory(nextCat);
-    window.localStorage.setItem(defaultTypeKey, nextType);
-    window.localStorage.setItem("spendwise-default-type", nextType);
-    window.localStorage.setItem(defaultCategoryKey, nextCat);
-    window.localStorage.setItem("spendwise-default-category", nextCat);
+    settingsService.savePreferences({ defaultType: nextType, defaultCategory: nextCat });
     setIsPrefSaved(true);
     setTimeout(() => setIsPrefSaved(false), 1500);
   }
 
   function handleCategoryChange(nextCat) {
     setDefaultCategory(nextCat);
-    window.localStorage.setItem(defaultCategoryKey, nextCat);
-    window.localStorage.setItem("spendwise-default-category", nextCat);
+    settingsService.savePreferences({ defaultType, defaultCategory: nextCat });
     setIsPrefSaved(true);
     setTimeout(() => setIsPrefSaved(false), 1500);
   }
 
   function handleSavePreferences(event) {
     if (event) event.preventDefault();
-    window.localStorage.setItem(defaultTypeKey, defaultType);
-    window.localStorage.setItem("spendwise-default-type", defaultType);
-    window.localStorage.setItem(defaultCategoryKey, defaultCategory);
-    window.localStorage.setItem("spendwise-default-category", defaultCategory);
+    settingsService.savePreferences({ defaultType, defaultCategory });
     setIsPrefSaved(true);
     setTimeout(() => setIsPrefSaved(false), 2000);
   }
@@ -253,22 +240,20 @@ function Settings({ user, incomePlan, onSaveIncomePlan }) {
                 <button
                   type="button"
                   onClick={() => handleTypeChange("expense")}
-                  className={`rounded-xl border py-2.5 text-xs font-bold transition-all active:scale-95 ${
-                    defaultType === "expense"
-                      ? "border-midnight bg-midnight text-white shadow-xs"
-                      : "border-stone-300 bg-white text-stone-700 hover:bg-stone-50"
-                  }`}
+                  className={`rounded-xl border py-2.5 text-xs font-bold transition-all active:scale-95 ${defaultType === "expense"
+                    ? "border-midnight bg-midnight text-white shadow-xs"
+                    : "border-stone-300 bg-white text-stone-700 hover:bg-stone-50"
+                    }`}
                 >
                   Expense
                 </button>
                 <button
                   type="button"
                   onClick={() => handleTypeChange("income")}
-                  className={`rounded-xl border py-2.5 text-xs font-bold transition-all active:scale-95 ${
-                    defaultType === "income"
-                      ? "border-midnight bg-midnight text-white shadow-xs"
-                      : "border-stone-300 bg-white text-stone-700 hover:bg-stone-50"
-                  }`}
+                  className={`rounded-xl border py-2.5 text-xs font-bold transition-all active:scale-95 ${defaultType === "income"
+                    ? "border-midnight bg-midnight text-white shadow-xs"
+                    : "border-stone-300 bg-white text-stone-700 hover:bg-stone-50"
+                    }`}
                 >
                   Income
                 </button>

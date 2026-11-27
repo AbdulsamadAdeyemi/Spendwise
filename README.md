@@ -1,52 +1,38 @@
 # SpendWise
 
-SpendWise is a personal finance and expense tracking web application built with **React 19**, **Vite**, and **Tailwind CSS v4**.
+SpendWise is a personal finance tracker with a React/Vite frontend, an Express API, JWT authentication, and Neon PostgreSQL storage.
 
-SpendWise runs completely in the browser and stores account and ledger data in `localStorage`. It is a local demo/personal tracker, not a secure multi-user finance service. Browser storage can be read or changed by the device owner and by scripts running on the same origin; the local sign-in screen is not server-side authentication or authorization.
+## Project structure
 
----
+- `src/` — React frontend
+- `api/index.js` — Vercel serverless entry point
+- `backend/src/` — Express API, authentication, database access and migrations
+- `backend/test/` — backend tests
+- `neon.ts` — Neon project configuration
 
-## Features
+## Local development
 
-* **Account Management**: Local account registration and login using salted PBKDF2 password verification. Existing SHA-256 password records are upgraded after a successful login.
-* **Transaction Tracking**: Add, edit, filter, and delete income and expense records. Real-time search by title and filter by category or type.
-* **Persistent Storage**: Transactions and income plans are stored in browser storage per local account. Clearing site data deletes this information.
-* **Data Visualizations (Recharts)**:
-  * Category spending breakdown (Donut chart)
-  * Income vs. expenses comparison
-  * Monthly spending trendline
-* **Wallet & Budgets**: Summary cards for balance, recorded cash flow, and monthly budget targets.
-* **Data Management**: Export transaction history to JSON backup or clear ledger records in Settings.
-* **Currency Support**: Built-in Nigerian Naira (`₦`) formatting.
+1. Install dependencies: `npm ci`
+2. Copy `backend/.env.example` to `backend/.env` and configure `DATABASE_URL` and `JWT_SECRET`.
+3. Apply schema: `npm run migrate`
+4. Run the API: `npm start`
+5. In another terminal run `npm run dev`.
 
----
+## Vercel deployment
 
-## Getting Started
+The repository root is the Vercel project root. Vercel builds the frontend to `dist/` and routes `/api/*` to `api/index.js`.
 
-### Prerequisites
-* Node.js 18+ or 20+
-* npm
+Set these server-side environment variables in Vercel for Production (and Preview if needed):
 
-### Running Locally
+- `DATABASE_URL` — Neon pooled PostgreSQL connection string
+- `JWT_SECRET` — a strong random secret (at least 32 characters)
+- `NODE_ENV` — `production`
+- `CLIENT_URL` — the deployed SpendWise origin
 
-```bash
-cd Spendwise
-npm install
-npm run dev
-```
+Never commit `.env` files or paste secrets into source code.
 
-Open `http://localhost:5173` in your browser.
+## Verification
 
-### Build and Lint
-
-```bash
-npm run lint    # Check code style with ESLint
-npm run build   # Generate production bundle in dist/
-npm run preview # Preview the production build locally
-```
-
-## Security Limitations
-
-This frontend has no trusted server, so it cannot protect financial data from someone with access to the browser profile, developer tools, or a same-origin script vulnerability. PBKDF2 makes a copied password record more expensive to guess, but does not make browser storage private or make the local login a security boundary. Do not use this app for sensitive financial records or store production credentials in it.
-
-For a public deployment with real accounts or sensitive data, add a backend that performs authentication and authorizes every data operation. Use HTTPS, secure `HttpOnly` and `SameSite` session cookies, and configure response security headers at the hosting layer, including a tested Content Security Policy, `frame-ancestors`, `X-Content-Type-Options`, a restrictive `Referrer-Policy`, and HSTS over HTTPS. Keep secrets and authorization decisions out of frontend code. The required header policy depends on the chosen host and any external resources the app uses.
+- `npm run build`
+- `npm run lint`
+- `npm run test:backend`

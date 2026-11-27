@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Trash2, Plus, X, Pencil, Search } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import {
@@ -8,6 +8,8 @@ import {
   isIncomeTransaction,
   normalizeAmount,
 } from "../utils/finance";
+import { settingsService } from "../services/settingsService";
+import { transactionService } from "../services/transactionService";
 
 function TransactionList({ transactions, setTransactions }) {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -20,16 +22,25 @@ function TransactionList({ transactions, setTransactions }) {
         ? "Income"
         : initialCat || "";
 
+  const [entryPreferences, setEntryPreferences] = useState({ type: "expense", category: "Food" });
+
+  useEffect(() => {
+    let isMounted = true;
+    settingsService.getPreferences().then((prefs) => {
+      if (isMounted && prefs) {
+        setEntryPreferences({
+          type: prefs.defaultType || "expense",
+          category: prefs.defaultCategory || "Food",
+        });
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   function getDefaultEntryPreferences() {
-    try {
-      const savedType = window.localStorage.getItem("spendwise-default-type") || "expense";
-      const savedCat =
-        window.localStorage.getItem("spendwise-default-category") ||
-        (savedType === "income" ? "Income" : "Food");
-      return { type: savedType, category: savedCat };
-    } catch {
-      return { type: "expense", category: "Food" };
-    }
+    return entryPreferences;
   }
 
   const urlType = searchParams.get("type");
@@ -165,59 +176,83 @@ function TransactionList({ transactions, setTransactions }) {
     setSearchParams(nextParams, { replace: true });
   }
 
-  // Add or update transaction
-  function saveTransaction(event) {
+  // Add or update transaction directly in PostgreSQL backend
+  async function saveTransaction(event) {
     event.preventDefault();
 
     const cleanAmount = Math.max(0, normalizeAmount(amount));
     if (!name.trim() || !category || !type || cleanAmount <= 0) return;
 
     if (editingId !== null) {
-      setTransactions((prevTransactions) =>
-        prevTransactions.map((transaction) =>
-          transaction.id === editingId
-            ? {
-              ...transaction,
-              name: name.trim(),
-              amount: cleanAmount,
-              category,
-              type: type.toLowerCase(),
-            }
-            : transaction
-        )
-      );
+      const payload = {
+        name: name.trim(),
+        description: name.trim(),
+        amount: cleanAmount,
+        category,
+        type: type.toLowerCase(),
+      };
+
+      try {
+        const updated = await transactionService.updateTransaction(editingId, payload);
+        setTransactions((prevTransactions) =>
+          prevTransactions.map((transaction) =>
+            transaction.id === editingId
+              ? {
+                  ...transaction,
+                  ...updated,
+                  name: updated.name || updated.description || payload.name,
+                }
+              : transaction
+          )
+        );
+      } catch (err) {
+        console.error("[TransactionList] Failed to update transaction on backend:", err);
+      }
     } else {
       const now = new Date();
       const localYear = now.getFullYear();
       const localMonth = String(now.getMonth() + 1).padStart(2, "0");
       const localDay = String(now.getDate()).padStart(2, "0");
 
-      const newTransaction = {
-        id: Date.now(),
+      const payload = {
         name: name.trim(),
+        description: name.trim(),
         amount: cleanAmount,
         category,
         type: type.toLowerCase(),
         date: `${localYear}-${localMonth}-${localDay}`,
       };
 
-      setTransactions((prevTransactions) => [
-        ...prevTransactions,
-        newTransaction,
-      ]);
+      try {
+        const created = await transactionService.createTransaction(payload);
+        setTransactions((prevTransactions) => [
+          {
+            ...created,
+            name: created.name || created.description || payload.name,
+          },
+          ...prevTransactions,
+        ]);
+      } catch (err) {
+        console.error("[TransactionList] Failed to create transaction on backend:", err);
+      }
     }
 
     closeModal();
   }
 
-  // Delete transaction
-  function deleteTransaction(id) {
+  // Delete transaction directly from PostgreSQL backend
+  async function deleteTransaction(id) {
     const transaction = transactions.find((item) => item.id === id);
     if (!transaction) return;
 
-    setTransactions((prevTransactions) =>
-      prevTransactions.filter((item) => item.id !== id)
-    );
+    try {
+      await transactionService.deleteTransaction(id);
+      setTransactions((prevTransactions) =>
+        prevTransactions.filter((item) => item.id !== id)
+      );
+    } catch (err) {
+      console.error("[TransactionList] Failed to delete transaction on backend:", err);
+    }
   }
 
   function clearFilters() {
